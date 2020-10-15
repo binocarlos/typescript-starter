@@ -1,0 +1,61 @@
+version: '3.4'
+volumes:
+  postgres-data:
+services:
+  postgres:
+    image: postgres:9.6.1
+    env_file: .env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  router:
+    image: binocarlos/noxy
+    restart: always
+    ports:
+      - 80:80
+    depends_on:
+      - api
+      - frontend
+    environment:
+      - NOXY_DEFAULT_HOST=frontend
+      - NOXY_DEFAULT_PORT=8080
+      - NOXY_DEFAULT_WS=1
+      - NOXY_API_FRONT=/api/v1
+      - NOXY_API_HOST=api
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: build-env
+    restart: always
+    env_file: .env
+    ports:
+      - 8080:8080
+    entrypoint: bash -c 'if [ -n "$MANUALRUN" ]; then tail -f /dev/null; else yarn run develop; fi'
+    environment:
+      - NODE_ENV=development
+      - MANUALRUN
+    volumes:
+      - ./frontend/package.json:/app/frontend/package.json
+      - ./frontend/tsconfig.json:/app/frontend/tsconfig.json
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/.cache:/app/frontend..cache
+      - ./frontend/dist:/app/frontend/dist
+      - ./types/src:/app/frontend/node_modules/typescript-starter-types/src
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: always
+    env_file: .env
+    entrypoint: bash -c 'if [ -n "$MANUALRUN" ]; then tail -f /dev/null; else yarn run serve; fi'
+    environment:
+      - NODE_ENV=development
+      - MANUALRUN
+    volumes:
+      - ./api/knexfile.ts:/app/api/knexfile.ts
+      - ./api/package.json:/app/api/package.json
+      - ./api/tsconfig.json:/app/api/tsconfig.json
+      - ./api/src:/app/api/src
+      - ./api/test:/app/api/test
+      - ./api/migrations:/app/api/migrations
+      - ./types/src:/app/api/node_modules/typescript-starter-types/src

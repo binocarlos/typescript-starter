@@ -1,0 +1,28 @@
+FROM mhart/alpine-node:11.12 AS build-env
+LABEL maintainer="kai@kaidam.ltd"
+
+RUN apk update
+RUN apk upgrade
+RUN apk add bash git
+
+WORKDIR /app/frontend
+
+# install node_modules
+COPY ./types /app/types
+COPY ./frontend/package.json /app/frontend/package.json
+COPY ./frontend/yarn.lock /app/frontend/yarn.lock
+
+RUN yarn install
+
+# copy files
+COPY ./frontend /app/frontend
+
+ARG productionMode
+RUN if [ -n "$productionMode" ]; then yarn run build; fi
+
+ENTRYPOINT ["yarn", "run", "develop"]
+
+FROM nginx:alpine
+LABEL maintainer="kai@kaidam.ltd"
+COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY --from=build-env /app/dist /www

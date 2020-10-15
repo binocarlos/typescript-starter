@@ -1,0 +1,47 @@
+variables:
+  DOCKER_REGISTRY: gcr.io
+  GCP_PROJECT_ID: webkit-servers
+  GCP_ZONE: europe-west1-b
+  GCP_CLUSTER_ID: appcluster
+
+  NAMESPACE: franchisecloud
+
+  IMAGE_FRONTEND_NAME: franchisecloud-frontend
+  IMAGE_API_NAME: franchisecloud-api
+
+stages:
+  - deploy
+
+deploy_frontend:
+  stage: deploy
+  only:
+    refs:
+      - master
+    changes:
+      - "frontend/**/*"
+  variables:
+    IMAGE_FRONTEND: $DOCKER_REGISTRY/$GCP_PROJECT_ID/$IMAGE_FRONTEND_NAME:$CI_COMMIT_SHA
+  before_script:
+    - bash ./scripts/ci_connect.sh
+  script:
+    - docker build -t $IMAGE_FRONTEND --build-arg productionMode=1 frontend
+    - docker push $IMAGE_FRONTEND
+    - cat deploy/frontend-deployment.yaml | envsubst
+    - cat deploy/frontend-deployment.yaml | envsubst | kubectl apply -f -
+
+deploy_api:
+  stage: deploy
+  only:
+    refs:
+      - master
+    changes:
+      - "api/**/*"
+  variables:
+    IMAGE_API: $DOCKER_REGISTRY/$GCP_PROJECT_ID/$IMAGE_API_NAME:$CI_COMMIT_SHA
+  before_script:
+    - bash ./scripts/ci_connect.sh
+  script:  
+    - docker build -t $IMAGE_API api
+    - docker push $IMAGE_API
+    - cat deploy/api-deployment.yaml | envsubst
+    - cat deploy/api-deployment.yaml | envsubst | kubectl apply -f -

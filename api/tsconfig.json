@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es5",                          
+    "module": "commonjs",                    
+    "lib": ["es6"],                     
+    "allowJs": true,
+    "outDir": "build",                          
+    "rootDir": ".",
+    "strict": false,         
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "Dockerfile",
+    ".dockerignore",
+    "src",
+    "test",
+    "migrations",
+    "knexfile.ts",
+    "package.json",
+    "yarn.lock",
+    ".yarnrc"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

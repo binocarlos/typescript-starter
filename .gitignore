@@ -1,0 +1,11 @@
+node_modules
+yarn-error.log
+build
+public
+lib
+.DS_Store
+dist
+.cache
+env.*
+.env
+api/build

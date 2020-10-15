@@ -1,0 +1,108 @@
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+function build() {
+  docker-compose build
+}
+
+function up() {
+  docker-compose up -d
+}
+
+function run() {
+  local service="${1-}"
+  if [ -z "$service" ]; then
+    >&2 echo "please give the service name"
+    exit 1
+  fi
+  local yarnCommand="develop"
+  docker-compose exec "$service" yarn run "$yarnCommand"
+}
+
+function cli() {
+  local service="${1-}"
+  if [ -z "$service" ]; then
+    >&2 echo "please give the service name"
+    exit 1
+  fi
+  docker-compose exec "$service" bash
+}
+
+function migrate() {
+  docker-compose exec api yarn run migrate
+}
+
+function rebuild() {
+  local service="${1-}"
+  if [ -z "$service" ]; then
+    >&2 echo "please give the service name"
+    exit 1
+  fi
+  docker-compose stop "$service"
+	docker-compose rm -f "$service"
+	docker-compose build "$service"
+	docker-compose up -d "$service"
+}
+
+function db() {
+  local subcommand="${1-cli}"
+  shift
+  if [[ "$subcommand" == "cli" ]]; then
+    docker-compose exec postgres psql --user postgres "$@"
+  elif [[ "$subcommand" == "pipe" ]]; then
+    docker-compose exec -T postgres psql --user postgres "$@"
+  elif [[ "$subcommand" == "migrate" ]]; then
+    docker-compose exec api yarn run knex -- migrate:latest
+  fi
+}
+
+function psql() {
+  db cli "$@"
+}
+
+function psql_pipe() {
+  db pipe "$@"
+}
+
+function gcloud() {
+  bash scripts/gcloud_connect.sh
+}
+
+function sync_prod() {
+  bash scripts/dump_production_database.sh | docker-compose exec -T postgres psql --user postgres
+}
+
+function prod_psql() {
+  bash scripts/prod_psql.sh
+}
+
+function link_modules() {
+  yarn lerna link
+  (cd packages/fc-types && yarn link)
+  (cd packages/fc-frontend && yarn link)
+  (cd api && yarn link @kaidam/fc-types)
+  (cd frontend && yarn link @kaidam/fc-frontend)
+}
+
+function upgrade_modules() {
+  (cd api && yarn upgrade @kaidam/fc-types)
+  (cd frontend && yarn upgrade @kaidam/fc-frontend)
+}
+
+function help() {
+  cat << EOF
+
+local cli
+
+usage: ./cli <command>
+EOF
+}
+
+command="$@"
+
+if [ -z "$command" ]; then
+  command="help"
+fi
+
+eval "$command"

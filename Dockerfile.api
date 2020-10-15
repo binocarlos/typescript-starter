@@ -1,0 +1,19 @@
+FROM mhart/alpine-node:12.18.3
+LABEL maintainer="kai@kaidam.ltd"
+RUN apk update
+RUN apk upgrade
+RUN apk add bash curl
+
+WORKDIR /app/api
+
+# install node_modules
+COPY ./types /app/types
+COPY ./api/package.json /app/api/package.json
+COPY ./api/yarn.lock /app/api/yarn.lock
+
+RUN yarn install
+
+# copy files
+COPY ./api /app/api
+
+ENTRYPOINT ["yarn", "run", "develop"]
