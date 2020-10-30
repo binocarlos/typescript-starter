@@ -47,7 +47,7 @@ services:
       dockerfile: Dockerfile.api
     restart: always
     env_file: .env
-    entrypoint: bash -c 'if [ -n "$MANUALRUN" ]; then tail -f /dev/null; else yarn run serve; fi'
+    entrypoint: bash -c 'if [ -n "$MANUALRUN" ]; then tail -f /dev/null; else yarn run develop; fi'
     environment:
       - NODE_ENV=development
       - MANUALRUN
