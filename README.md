@@ -31,17 +31,24 @@ The service account needs storage write access to the bucket named by `GOOGLE_ST
 
 The `GOOGLE_STORAGE_BUCKET_PREFIX` is a prefix path for uploaded files.
 
+If you do not have Google Cloud, just do not include it in the .env
+
 ### boot dev stack
 
 ```bash
 ./stack build
-bash scripts/tmux.sh
+docker-compose up
 # in free window
-
 
 ```
 
 Open `http://localhost`
+
+Check logs for errors if needed by
+```bash
+docker-compose logs api
+docker-compose logs frontend
+```
 
 If you want to run the tmux version:
 
