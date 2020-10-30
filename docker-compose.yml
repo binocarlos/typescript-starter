@@ -51,6 +51,7 @@ services:
     environment:
       - NODE_ENV=development
       - MANUALRUN
+      - NO_STORAGE=1
     volumes:
       - ./api/knexfile.ts:/app/api/knexfile.ts
       - ./api/package.json:/app/api/package.json

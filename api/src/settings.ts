@@ -4,15 +4,22 @@ import {
   Settings,
 } from './types/system'
 
-const required_env: string[] = [
+let required_env: string[] = [
   'POSTGRES_USER',
   'POSTGRES_DB',
   'POSTGRES_PASSWORD',
   'JWT_SECRET_KEY',
+]
+
+const storage_required_env: string[] = [
   'GOOGLE_CLOUD_SERVICE_ACCOUNT',
   'GOOGLE_STORAGE_BUCKET_NAME',
   'GOOGLE_STORAGE_BUCKET_PREFIX',
 ]
+
+if(!process.env.NO_STORAGE) {
+  required_env = required_env.concat(storage_required_env)
+}
 
 const decodeBase64_env: string[] = [
   'google_cloud_service_account',
@@ -61,11 +68,15 @@ const args: Settings = require('minimist')(process.argv, {
 })
 
 decodeBase64_env.forEach(name => {
-  args[name] = Buffer.from(args[name], 'base64').toString()
+  if(args[name]) {
+    args[name] = Buffer.from(args[name], 'base64').toString()
+  }
 })
 
 decodeJSON_env.forEach(name => {
-  args[name] = JSON.parse(args[name])
+  if(args[name]) {
+    args[name] = JSON.parse(args[name])
+  }
 })
 
 if(args.google_cloud_service_account) {
